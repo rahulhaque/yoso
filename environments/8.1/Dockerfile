@@ -11,10 +11,10 @@ WORKDIR /var/www/html
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=UTC
-ENV NPM_CONFIG_PREFIX=/home/cruise/.npm-global
+ENV NPM_CONFIG_PREFIX=/home/yoso/.npm-global
 
-ENV PATH=$PATH:/home/cruise/.npm-global/bin
-ENV PATH=$PATH:/home/cruise/.config/composer/vendor/bin
+ENV PATH=$PATH:/home/yoso/.npm-global/bin
+ENV PATH=$PATH:/home/yoso/.config/composer/vendor/bin
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
@@ -65,7 +65,7 @@ RUN apt-get install -y libxext6 libxrender1 xfonts-base xfonts-75dpi \
 
 # Install Oh-my-zsh
 RUN apt-get install -y git zsh \
-    && export HOME=/home/cruise \
+    && export HOME=/home/yoso \
     && sh -c "$(wget -O- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" --unattended \
     && git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions \
     && zsh -i -c 'omz theme set steeef' \
@@ -91,15 +91,15 @@ COPY $PHP_VERSION/nginx.octane.conf /etc/nginx/conf.d/octane.conf.bak
 
 # Update runtime permissions
 RUN setcap "cap_net_bind_service=+ep" /usr/bin/php$PHP_VERSION \
-    && groupadd --force -g $WWWGROUP cruise \
-    && useradd -s /usr/bin/zsh --no-create-home --no-user-group -g $WWWGROUP -u $WWWUSER cruise \
-    && mkdir -p /home/cruise/.npm-global/lib \
-    && mkdir -p /home/cruise/.npm-global/bin \
-    && mkdir -p /home/cruise/.config \
-    && mv /root/.config/composer /home/cruise/.config/ \
-    && chown -R $WWWUSER:$WWWGROUP /home/cruise \
+    && groupadd --force -g $WWWGROUP yoso \
+    && useradd -s /usr/bin/zsh --no-create-home --no-user-group -g $WWWGROUP -u $WWWUSER yoso \
+    && mkdir -p /home/yoso/.npm-global/lib \
+    && mkdir -p /home/yoso/.npm-global/bin \
+    && mkdir -p /home/yoso/.config \
+    && mv /root/.config/composer /home/yoso/.config/ \
+    && chown -R $WWWUSER:$WWWGROUP /home/yoso \
     && rm /etc/nginx/sites-enabled/default \
-    && sed -i 's/www-data;/cruise;/g' /etc/nginx/nginx.conf \
+    && sed -i 's/www-data;/yoso;/g' /etc/nginx/nginx.conf \
     && chmod +x /usr/local/bin/start-server \
     && chmod +x /usr/local/bin/node-switch
 

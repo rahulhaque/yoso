@@ -10,16 +10,16 @@ case "${UNAMEOUT}" in
 esac
 
 if [ "$MACHINE" == "UNKNOWN" ]; then
-    echo "Unsupported operating system [$(uname -s)]. Cruise supports macOS, Linux, and Windows (WSL2)." >&2
+    echo "Unsupported operating system [$(uname -s)]. YOSO supports macOS, Linux, and Windows (WSL2)." >&2
 
     exit 1
 fi
 
-CRUISE_DIRECTORY="$HOME/.cruise"
+YOSO_DIRECTORY="$HOME/.yoso"
 
 # Source the ".config" file for environment variables...
-if [ -f "$CRUISE_DIRECTORY/.config" ]; then
-    source "$CRUISE_DIRECTORY/.config"
+if [ -f "$YOSO_DIRECTORY/.config" ]; then
+    source "$YOSO_DIRECTORY/.config"
 fi
 
 # Define global parameters...
@@ -77,7 +77,7 @@ else
     display_help 1
 fi
 
-# Function that outputs Cruise is not running...
+# Function that outputs YOSO is not running...
 function traefik_is_not_running {
     echo "${YELLOW}Traefik is not running.${NC}" >&2
     echo "${YELLOW}You may run Traefik using:${NC} ${GREEN}traefik start${NC}" >&2
@@ -127,19 +127,19 @@ if [ "$1" == "install" ]; then
         check_if_network_exists
 
         sudo mkdir -p /usr/local/bin
-        sudo ln -sf "$CRUISE_DIRECTORY/traefik" /usr/local/bin/traefik
+        sudo ln -sf "$YOSO_DIRECTORY/traefik" /usr/local/bin/traefik
         INSTALL_STATUS=$?
 
         # Bash completions: Homebrew prefix on macOS, /etc on Linux...
         if [ -d /opt/homebrew/etc/bash_completion.d ]; then
-            sudo ln -sf "$CRUISE_DIRECTORY/completions/traefik-completion" /opt/homebrew/etc/bash_completion.d/traefik-completion
+            sudo ln -sf "$YOSO_DIRECTORY/completions/traefik-completion" /opt/homebrew/etc/bash_completion.d/traefik-completion
         elif [ -d /usr/local/etc/bash_completion.d ]; then
-            sudo ln -sf "$CRUISE_DIRECTORY/completions/traefik-completion" /usr/local/etc/bash_completion.d/traefik-completion
+            sudo ln -sf "$YOSO_DIRECTORY/completions/traefik-completion" /usr/local/etc/bash_completion.d/traefik-completion
         elif [ "$MACHINE" == "mac" ]; then
-            echo "${YELLOW}Bash completions skipped. Run 'brew install bash-completion' and reinstall, or add 'source $CRUISE_DIRECTORY/completions/traefik-completion' to your ~/.bash_profile.${NC}" >&2
+            echo "${YELLOW}Bash completions skipped. Run 'brew install bash-completion' and reinstall, or add 'source $YOSO_DIRECTORY/completions/traefik-completion' to your ~/.bash_profile.${NC}" >&2
         else
             sudo mkdir -p /etc/bash_completion.d
-            sudo ln -sf "$CRUISE_DIRECTORY/completions/traefik-completion" /etc/bash_completion.d/traefik-completion
+            sudo ln -sf "$YOSO_DIRECTORY/completions/traefik-completion" /etc/bash_completion.d/traefik-completion
 
             if [ $? -ne 0 ]; then
                 INSTALL_STATUS=1
@@ -147,7 +147,7 @@ if [ "$1" == "install" ]; then
         fi
 
         if [ -d "$HOME/.oh-my-zsh/custom" ]; then
-            sudo ln -sf "$CRUISE_DIRECTORY/completions/traefik-completion" "$HOME/.oh-my-zsh/custom/traefik-completion.zsh"
+            sudo ln -sf "$YOSO_DIRECTORY/completions/traefik-completion" "$HOME/.oh-my-zsh/custom/traefik-completion.zsh"
         fi
 
         if [ "$INSTALL_STATUS" == 0 ]; then
@@ -336,7 +336,7 @@ else
 fi
 
 # Print the generated docker command when debug is enabled...
-if [ "$CRUISE_DEBUG_ENABLED" == "yes" ]; then
+if [ "$YOSO_DEBUG_ENABLED" == "yes" ]; then
     echo "" >&1
     echo "${YELLOW}Debug command:${NC} ${CYAN}${ARGS[@]}${NC}" >&1
     echo "" >&1

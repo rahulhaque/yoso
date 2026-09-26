@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-_cruise_autocomplete() {
+_yoso_autocomplete() {
     local cur prev cmd flags w i commands
     COMPREPLY=()
     cur="${COMP_WORDS[COMP_CWORD]}"
@@ -57,8 +57,8 @@ _cruise_autocomplete() {
 
     case "$prev" in
         -v)
-            if [[ -d "$HOME/.cruise/environments" ]]; then
-                COMPREPLY=( $(compgen -W "$(ls "$HOME/.cruise/environments" 2>/dev/null)" -- "$cur") )
+            if [[ -d "$HOME/.yoso/environments" ]]; then
+                COMPREPLY=( $(compgen -W "$(ls "$HOME/.yoso/environments" 2>/dev/null)" -- "$cur") )
             fi
             return 0
             ;;
@@ -81,7 +81,7 @@ _cruise_autocomplete() {
         -u)
             case "$cmd" in
                 shell)
-                    COMPREPLY=( $(compgen -W "cruise root" -- "$cur") )
+                    COMPREPLY=( $(compgen -W "yoso root" -- "$cur") )
                     ;;
             esac
             return 0
@@ -105,4 +105,4 @@ _cruise_autocomplete() {
     return 0
 }
 
-complete -F _cruise_autocomplete cruise
+complete -F _yoso_autocomplete yoso

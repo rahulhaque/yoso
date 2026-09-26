@@ -10,16 +10,16 @@ case "${UNAMEOUT}" in
 esac
 
 if [ "$MACHINE" == "UNKNOWN" ]; then
-    echo "Unsupported operating system [$(uname -s)]. Cruise supports macOS, Linux, and Windows (WSL2)." >&2
+    echo "Unsupported operating system [$(uname -s)]. YOSO supports macOS, Linux, and Windows (WSL2)." >&2
 
     exit 1
 fi
 
-CRUISE_DIRECTORY="$HOME/.cruise"
+YOSO_DIRECTORY="$HOME/.yoso"
 
 # Source the ".config" file for environment variables...
-if [ -f "$CRUISE_DIRECTORY/.config" ]; then
-    source "$CRUISE_DIRECTORY/.config"
+if [ -f "$YOSO_DIRECTORY/.config" ]; then
+    source "$YOSO_DIRECTORY/.config"
 fi
 
 # Define global parameters...
@@ -46,14 +46,23 @@ fi
 
 # Function that prints the available commands...
 function display_help {
-    echo "Cruise"
+    cat <<EOL
+${CYAN}██╗   ██╗  ██████╗   ██████╗   ██████╗
+ ██╗ ██╔╝ ██╔═══██╗ ██╔════╝  ██╔═══██╗
+  ████╔╝  ██║   ██║  █████═╗  ██║   ██║
+   ██╔╝   ██║   ██║   ╚══██║  ██║   ██║
+   ██║     ██████╔╝ ██████╔╝   ██████╔╝
+   ╚═╝     ╚═════╝  ╚═════╝    ╚═════╝${NC}
+
+          ${BOLD}You Only Setup Once${NC}
+EOL
     echo
     echo "${YELLOW}Usage:${NC}" >&2
-    echo "  cruise [command] [options] [arguments]"
+    echo "  yoso [command] [options] [arguments]"
     echo
     echo "${YELLOW}Commands:${NC}"
     echo "  ${GREEN}environments${NC}        Show available environments to build"
-    echo "  ${GREEN}build${NC}               Build the cruise image"
+    echo "  ${GREEN}build${NC}               Build the yoso image"
     echo "    ${BOLD}-v <version>${NC}       Specify a version (Default: ${DEFAULT_IMAGE_VERSION})"
     echo "    ${BOLD}-f${NC}                 Rebuild from scratch"
     echo "  ${GREEN}start${NC}               Start the application"
@@ -71,9 +80,9 @@ function display_help {
     echo "    ${BOLD}-f${NC}                 Stop the application and remove the container"
     echo "  ${GREEN}restart${NC}             Restart the application"
     echo "    ${BOLD}-v <version>${NC}       Specify a version (Default: ${DEFAULT_IMAGE_VERSION})"
-    echo "  ${GREEN}status${NC}              Show cruise status"
-    echo "  ${GREEN}containers${NC}          Show running cruise containers"
-    echo "    ${BOLD}-a${NC}                 Show all cruise containers"
+    echo "  ${GREEN}status${NC}              Show yoso status"
+    echo "  ${GREEN}containers${NC}          Show running yoso containers"
+    echo "    ${BOLD}-a${NC}                 Show all yoso containers"
     echo "  ${GREEN}check${NC}               Check project image and container status"
     echo "    ${BOLD}-v <version>${NC}       Specify a version (Default: ${DEFAULT_IMAGE_VERSION})"
     echo "  ${GREEN}shell${NC}               Start a shell in the folder"
@@ -89,10 +98,10 @@ function display_help {
     echo "    ${BOLD}-b${NC}                 Run in the background"
     echo "  ${GREEN}run${NC}                 Run an executable from inside of the container"
     echo "    ${BOLD}-v <version>${NC}       Specify a version (Default: ${DEFAULT_IMAGE_VERSION})"
-    echo "  ${GREEN}export${NC}              Backup a cruise image as .tar"
+    echo "  ${GREEN}export${NC}              Backup a yoso image as .tar"
     echo "    ${BOLD}-v <version>${NC}       Specify a version (Default: ${DEFAULT_IMAGE_VERSION})"
-    echo "  ${GREEN}import${NC}              Import a cruise image from provided path"
-    echo "  ${GREEN}remove${NC}              Remove a built cruise image"
+    echo "  ${GREEN}import${NC}              Import a yoso image from provided path"
+    echo "  ${GREEN}remove${NC}              Remove a built yoso image"
     echo "    ${BOLD}-v <version>${NC}       Specify a version (Default: ${DEFAULT_IMAGE_VERSION})"
     echo "    ${BOLD}-a${NC}                 Remove all dependent images"
     echo "    ${BOLD}-f${NC}                 Force remove the image"
@@ -111,9 +120,9 @@ function display_help {
     echo "  ${GREEN}code${NC}                Open project in vscode inside the container"
     echo "    ${BOLD}-v <version>${NC}       Specify a version (Default: ${DEFAULT_IMAGE_VERSION})"
     echo
-    echo "  ${GREEN}install${NC}             Install cruise binary"
-    echo "  ${GREEN}uninstall${NC}           Uninstall cruise binary"
-    echo "    ${BOLD}-f${NC}                 Stop cruise, remove the container and uninstall binary"
+    echo "  ${GREEN}install${NC}             Install yoso binary"
+    echo "  ${GREEN}uninstall${NC}           Uninstall yoso binary"
+    echo "    ${BOLD}-f${NC}                 Stop yoso, remove the container and uninstall binary"
 
     exit "${1:-1}"
 }
@@ -127,10 +136,10 @@ else
     display_help 1
 fi
 
-# Function that outputs Cruise is not running...
-function cruise_is_not_running {
-    echo "${YELLOW}Cruise is not running for this location or project.${NC}" >&2
-    echo "${YELLOW}You may run Cruise using:${NC} ${GREEN}cruise start${NC} or ${GREEN}cruise traefik${NC}" >&2
+# Function that outputs YOSO is not running...
+function yoso_is_not_running {
+    echo "${YELLOW}YOSO is not running for this location or project.${NC}" >&2
+    echo "${YELLOW}You may run YOSO using:${NC} ${GREEN}yoso start${NC} or ${GREEN}yoso traefik${NC}" >&2
 
     exit 1
 }
@@ -164,28 +173,28 @@ function check_if_network_exists {
 }
 
 function check_if_config_file_exists {
-    # Check if .cruise config file missing and -b option is provided in command...
-    if [[ ! -f ".cruise" && -n "$background" ]]; then
-        cat <<EOL > ".cruise"
+    # Check if .yoso config file missing and -b option is provided in command...
+    if [[ ! -f ".yoso" && -n "$background" ]]; then
+        cat <<EOL > ".yoso"
 IMAGE_VERSION=$IMAGE_VERSION
 EOL
-        source ".cruise"
+        source ".yoso"
     fi
 
     # Check if -v option is provided in command...
     if [ -n "$NEW_IMAGE_VERSION" ]; then
-        sed -i.bak "s|^IMAGE_VERSION=.*|IMAGE_VERSION=$NEW_IMAGE_VERSION|" ".cruise" && rm -f ".cruise.bak"
+        sed -i.bak "s|^IMAGE_VERSION=.*|IMAGE_VERSION=$NEW_IMAGE_VERSION|" ".yoso" && rm -f ".yoso.bak"
 
-        echo "${GREEN}Updating .cruise config file...${NC}" >&1
+        echo "${GREEN}Updating .yoso config file...${NC}" >&1
 
-        source ".cruise"
+        source ".yoso"
     fi
 
-    # Check if .cruise config file exists in the project directory...
-    if [[ -f ".cruise" && -s ".cruise" ]]; then
-        echo "${GREEN}Loading environment from .cruise config file...${NC}" >&1
+    # Check if .yoso config file exists in the project directory...
+    if [[ -f ".yoso" && -s ".yoso" ]]; then
+        echo "${GREEN}Loading environment from .yoso config file...${NC}" >&1
 
-        source ".cruise"
+        source ".yoso"
     fi
 }
 
@@ -242,14 +251,14 @@ function configure_vscode_attach_config {
     fi
 
     # Attached containers are configured per image, not by any project devcontainer.json...
-    CONFIG_FILE="$USER_DIR/globalStorage/ms-vscode-remote.remote-containers/imageConfigs/cruise-$CONFIG_VERSION%3alatest.json"
+    CONFIG_FILE="$USER_DIR/globalStorage/ms-vscode-remote.remote-containers/imageConfigs/yoso-$CONFIG_VERSION%3alatest.json"
     CONFIG_WORKSPACE=${WORKING_DIRECTORY:-/var/www/html}
 
     if [ ! -f "$CONFIG_FILE" ]; then
         mkdir -p "$USER_DIR/globalStorage/ms-vscode-remote.remote-containers/imageConfigs"
 
-        if printf '{\n\t"workspaceFolder": "%s",\n\t"remoteUser": "cruise"\n}\n' "$CONFIG_WORKSPACE" > "$CONFIG_FILE"; then
-            echo "${GREEN}Vscode attach config created for cruise user ($CONFIG_FILE)...${NC}" >&1
+        if printf '{\n\t"workspaceFolder": "%s",\n\t"remoteUser": "yoso"\n}\n' "$CONFIG_WORKSPACE" > "$CONFIG_FILE"; then
+            echo "${GREEN}Vscode attach config created for yoso user ($CONFIG_FILE)...${NC}" >&1
         else
             echo "${YELLOW}Failed to create vscode attach config ($CONFIG_FILE)...${NC}" >&2
 
@@ -257,12 +266,12 @@ function configure_vscode_attach_config {
         fi
     elif ! grep -q '"remoteUser"' "$CONFIG_FILE"; then
         # Inject remote user without clobbering any manual configuration...
-        if awk '/^[ \t]*\{[ \t]*$/ && !inserted { print; printf "\t\"remoteUser\": \"cruise\",\n"; inserted = 1; next } { print }' "$CONFIG_FILE" > "$CONFIG_FILE.tmp" && mv -f "$CONFIG_FILE.tmp" "$CONFIG_FILE" && grep -q '"remoteUser"' "$CONFIG_FILE"; then
-            echo "${GREEN}Vscode attach config updated for cruise user ($CONFIG_FILE)...${NC}" >&1
+        if awk '/^[ \t]*\{[ \t]*$/ && !inserted { print; printf "\t\"remoteUser\": \"yoso\",\n"; inserted = 1; next } { print }' "$CONFIG_FILE" > "$CONFIG_FILE.tmp" && mv -f "$CONFIG_FILE.tmp" "$CONFIG_FILE" && grep -q '"remoteUser"' "$CONFIG_FILE"; then
+            echo "${GREEN}Vscode attach config updated for yoso user ($CONFIG_FILE)...${NC}" >&1
         else
             rm -f "$CONFIG_FILE.tmp"
 
-            echo "${YELLOW}Vscode attach config ($CONFIG_FILE) needs \"remoteUser\": \"cruise\" manually...${NC}" >&2
+            echo "${YELLOW}Vscode attach config ($CONFIG_FILE) needs \"remoteUser\": \"yoso\" manually...${NC}" >&2
         fi
     fi
 
@@ -271,31 +280,31 @@ function configure_vscode_attach_config {
 
 ARGS=()
 
-# Install cruise binary...
+# Install yoso binary...
 if [ "$1" == "install" ]; then
     shift 1
 
-    # Check if cruise binary is not installed...
-    if ! type cruise > /dev/null 2>&1; then
-        echo "${BOLD}Installing cruise binary...${NC}" >&2
+    # Check if yoso binary is not installed...
+    if ! type yoso > /dev/null 2>&1; then
+        echo "${BOLD}Installing yoso binary...${NC}" >&2
 
         check_if_docker_running
         check_if_network_exists
 
         sudo mkdir -p /usr/local/bin
-        sudo ln -sf "$CRUISE_DIRECTORY/cruise" /usr/local/bin/cruise
+        sudo ln -sf "$YOSO_DIRECTORY/yoso" /usr/local/bin/yoso
         INSTALL_STATUS=$?
 
         # Bash completions: Homebrew prefix on macOS, /etc on Linux...
         if [ -d /opt/homebrew/etc/bash_completion.d ]; then
-            sudo ln -sf "$CRUISE_DIRECTORY/completions/cruise-completion" /opt/homebrew/etc/bash_completion.d/cruise-completion
+            sudo ln -sf "$YOSO_DIRECTORY/completions/yoso-completion" /opt/homebrew/etc/bash_completion.d/yoso-completion
         elif [ -d /usr/local/etc/bash_completion.d ]; then
-            sudo ln -sf "$CRUISE_DIRECTORY/completions/cruise-completion" /usr/local/etc/bash_completion.d/cruise-completion
+            sudo ln -sf "$YOSO_DIRECTORY/completions/yoso-completion" /usr/local/etc/bash_completion.d/yoso-completion
         elif [ "$MACHINE" == "mac" ]; then
-            echo "${YELLOW}Bash completions skipped. Run 'brew install bash-completion' and reinstall, or add 'source $CRUISE_DIRECTORY/completions/cruise-completion' to your ~/.bash_profile.${NC}" >&2
+            echo "${YELLOW}Bash completions skipped. Run 'brew install bash-completion' and reinstall, or add 'source $YOSO_DIRECTORY/completions/yoso-completion' to your ~/.bash_profile.${NC}" >&2
         else
             sudo mkdir -p /etc/bash_completion.d
-            sudo ln -sf "$CRUISE_DIRECTORY/completions/cruise-completion" /etc/bash_completion.d/cruise-completion
+            sudo ln -sf "$YOSO_DIRECTORY/completions/yoso-completion" /etc/bash_completion.d/yoso-completion
 
             if [ $? -ne 0 ]; then
                 INSTALL_STATUS=1
@@ -303,7 +312,7 @@ if [ "$1" == "install" ]; then
         fi
 
         if [ -d "$HOME/.oh-my-zsh/custom" ]; then
-            sudo ln -sf "$CRUISE_DIRECTORY/completions/cruise-completion" "$HOME/.oh-my-zsh/custom/cruise-completion.zsh"
+            sudo ln -sf "$YOSO_DIRECTORY/completions/yoso-completion" "$HOME/.oh-my-zsh/custom/yoso-completion.zsh"
         fi
 
         if [ "$INSTALL_STATUS" == 0 ]; then
@@ -312,12 +321,12 @@ if [ "$1" == "install" ]; then
             echo "${RED}Installation failed!${NC}" >&2
         fi
     else
-        echo "${BOLD}Cruise binary is already installed.${NC}" >&2
+        echo "${BOLD}YOSO binary is already installed.${NC}" >&2
     fi
 
     exit 0
 
-# Uninstall the application image and cruise binary...
+# Uninstall the application image and yoso binary...
 elif [ "$1" == "uninstall" ]; then
     shift 1
 
@@ -328,49 +337,49 @@ elif [ "$1" == "uninstall" ]; then
         esac
     done
 
-    echo "${YELLOW}Uninstall cruise binary from your system (y/n)?${NC}"
+    echo "${YELLOW}Uninstall yoso binary from your system (y/n)?${NC}"
     read -r confirm
 
     if [ "$confirm" == "y" ]; then
         # Check if full uninstall...
         if [ "$full" == "yes" ]; then
-            CRUISE_CONTAINERS=$(docker ps --format '{{.Names}}' 2>/dev/null | grep -E '[^-]+-cruise-[^-]+')
+            YOSO_CONTAINERS=$(docker ps --format '{{.Names}}' 2>/dev/null | grep -E '[^-]+-yoso-[^-]+')
 
-            # Check if any cruise containers running...
-            if [[ -n "$CRUISE_CONTAINERS" ]]; then
-                echo "${BOLD}Found running cruise containers. Stopping and removing...${NC}" >&1
+            # Check if any yoso containers running...
+            if [[ -n "$YOSO_CONTAINERS" ]]; then
+                echo "${BOLD}Found running yoso containers. Stopping and removing...${NC}" >&1
 
-                docker rm -f $CRUISE_CONTAINERS
+                docker rm -f $YOSO_CONTAINERS
             else
-                echo "${BOLD}No running cruise containers found.${NC}" >&1
+                echo "${BOLD}No running yoso containers found.${NC}" >&1
             fi
         fi
 
-        # Check if cruise binary is already installed...
-        if type cruise > /dev/null 2>&1; then
-            echo "${BOLD}Cruise binary is found.${NC}" >&1
-            echo "${BOLD}Uninstalling cruise binary...${NC}" >&1
+        # Check if yoso binary is already installed...
+        if type yoso > /dev/null 2>&1; then
+            echo "${BOLD}YOSO binary is found.${NC}" >&1
+            echo "${BOLD}Uninstalling yoso binary...${NC}" >&1
 
-            sudo rm -f /usr/local/bin/cruise
+            sudo rm -f /usr/local/bin/yoso
             UNINSTALL_STATUS=$?
 
-            sudo rm -f /etc/bash_completion.d/cruise-completion /opt/homebrew/etc/bash_completion.d/cruise-completion /usr/local/etc/bash_completion.d/cruise-completion
+            sudo rm -f /etc/bash_completion.d/yoso-completion /opt/homebrew/etc/bash_completion.d/yoso-completion /usr/local/etc/bash_completion.d/yoso-completion
 
             if [ $? -ne 0 ]; then
                 UNINSTALL_STATUS=1
             fi
 
-            if [ -f "$HOME/.oh-my-zsh/custom/cruise-completion.zsh" ]; then
-                sudo rm -f "$HOME/.oh-my-zsh/custom/cruise-completion.zsh"
+            if [ -f "$HOME/.oh-my-zsh/custom/yoso-completion.zsh" ]; then
+                sudo rm -f "$HOME/.oh-my-zsh/custom/yoso-completion.zsh"
             fi
 
             if [ "$UNINSTALL_STATUS" == 0 ]; then
                 echo "${GREEN}Uninstall successful!${NC}" >&1
             else
-                echo "${RED}Cannot uninstall binary. Manually remove the binary from '/usr/local/bin/cruise'${NC}" >&2
+                echo "${RED}Cannot uninstall binary. Manually remove the binary from '/usr/local/bin/yoso'${NC}" >&2
             fi
         else
-            echo "${BOLD}Cruise binary is not installed.${NC}" >&2
+            echo "${BOLD}YOSO binary is not installed.${NC}" >&2
         fi
     else
         echo "${GREEN}Uninstall cancelled!${NC}" >&1
@@ -400,17 +409,17 @@ elif [ "$1" == "build" ]; then
     echo "${GREEN}Building image with following parameters...${NC}" >&1
     echo "${BOLD}v) $IMAGE_VERSION${NC}" >&1
     echo "${BOLD}f) $fresh_install${NC}" >&1
-    echo "${GREEN}Base image name will be${NC} cruise-$IMAGE_VERSION:latest" >&1
+    echo "${GREEN}Base image name will be${NC} yoso-$IMAGE_VERSION:latest" >&1
     echo "" >&1
 
-    ARGS+=(docker build --build-arg WWWGROUP=$(id -g) --build-arg WWWUSER=$(id -u) --build-arg PHP_VERSION=$IMAGE_VERSION -f $CRUISE_DIRECTORY/environments/$IMAGE_VERSION/Dockerfile -t cruise-$IMAGE_VERSION:latest $CRUISE_DIRECTORY/environments $fresh_install)
+    ARGS+=(docker build --build-arg WWWGROUP=$(id -g) --build-arg WWWUSER=$(id -u) --build-arg PHP_VERSION=$IMAGE_VERSION -f $YOSO_DIRECTORY/environments/$IMAGE_VERSION/Dockerfile -t yoso-$IMAGE_VERSION:latest $YOSO_DIRECTORY/environments $fresh_install)
 
 # Show available image versions...
 elif [ "$1" == "environments" ]; then
     shift 1
 
     echo "${GREEN}Available environments to use...${NC}" >&1
-    ls ~/.cruise/environments
+    ls ~/.yoso/environments
     echo "" >&1
 
     exit 0
@@ -435,12 +444,12 @@ elif [ "$1" == "export" ]; then
 
     echo "${GREEN}Exporting image with following parameters...${NC}" >&1
     echo "${BOLD}v) $IMAGE_VERSION${NC}" >&1
-    echo "${GREEN}Creating backup in $CRUISE_DIRECTORY/backup/cruise-$IMAGE_VERSION.tar${NC}" >&1
+    echo "${GREEN}Creating backup in $YOSO_DIRECTORY/backup/yoso-$IMAGE_VERSION.tar${NC}" >&1
     echo "${GREEN}Please wait..." >&1
     echo "" >&1
 
-    mkdir -p "$CRUISE_DIRECTORY/backup"
-    ARGS+=(docker image save -o "$CRUISE_DIRECTORY/backup/cruise-$IMAGE_VERSION.tar" "cruise-$IMAGE_VERSION:latest")
+    mkdir -p "$YOSO_DIRECTORY/backup"
+    ARGS+=(docker image save -o "$YOSO_DIRECTORY/backup/yoso-$IMAGE_VERSION.tar" "yoso-$IMAGE_VERSION:latest")
 
 # Import backed up application image...
 elif [ "$1" == "import" ]; then
@@ -487,27 +496,27 @@ elif [ "$1" == "remove" ]; then
 
     if [ -n "$NEW_IMAGE_VERSION" ]; then
         IMAGE_VERSION=$NEW_IMAGE_VERSION
-    # Check if .cruise config file exists in the project directory...
-    elif [[ -f ".cruise" && -s ".cruise" ]]; then
-        echo "${GREEN}Loading environment from .cruise config file...${NC}" >&1
+    # Check if .yoso config file exists in the project directory...
+    elif [[ -f ".yoso" && -s ".yoso" ]]; then
+        echo "${GREEN}Loading environment from .yoso config file...${NC}" >&1
 
-        source ".cruise"
+        source ".yoso"
     fi
 
     # Check if the user wants to remove all dependent images
     if [ "$all" == "yes" ]; then
         # Find all the containers using the image
-        DEPENDENT_CONTAINERS=$(docker ps -a --format '{{.Names}}' 2>/dev/null | grep -E "[^-]+-cruise-${IMAGE_VERSION}([^-]+)?")
+        DEPENDENT_CONTAINERS=$(docker ps -a --format '{{.Names}}' 2>/dev/null | grep -E "[^-]+-yoso-${IMAGE_VERSION}([^-]+)?")
 
         if [ -n "$DEPENDENT_CONTAINERS" ]; then
-            echo "${GREEN}Dependent containers found for image:${NC} cruise-$IMAGE_VERSION:latest" >&1
+            echo "${GREEN}Dependent containers found for image:${NC} yoso-$IMAGE_VERSION:latest" >&1
             echo "${GREEN}Stopping and removing dependent containers...${NC}" >&1
 
             docker rm -f $DEPENDENT_CONTAINERS
         fi
     fi
 
-    ARGS+=(docker rmi $force cruise-$IMAGE_VERSION:latest)
+    ARGS+=(docker rmi $force yoso-$IMAGE_VERSION:latest)
 
 # Start the application container...
 elif [ "$1" == "start" ]; then
@@ -543,7 +552,7 @@ elif [ "$1" == "start" ]; then
         # If container is running, then bash into it...
         echo "${GREEN}$CONTAINER_NAME is already running.${NC}" >&1
         echo "${GREEN}Attaching to existing container...${NC}" >&1
-        ARGS+=(docker exec -u cruise -it $CONTAINER_NAME $ENTRYPOINT)
+        ARGS+=(docker exec -u yoso -it $CONTAINER_NAME $ENTRYPOINT)
     elif [ "$(docker ps -a | grep $CONTAINER_NAME)" ]; then
         # If container exist, then start it...
         echo "${GREEN}Starting existing container...${NC}" >&1
@@ -574,10 +583,10 @@ elif [ "$1" == "start" ]; then
         # Run the image with parameters...
         if [ "$background" == "yes" ]; then
             echo "${GREEN}Starting new container in background...${NC}" >&1
-            ARGS+=(docker run -d --name $CONTAINER_NAME -v "${PWD}":$WORKING_DIRECTORY -w $WORKING_DIRECTORY --cap-add=NET_ADMIN --net $DEFAULT_NETWORK $IP --add-host host.docker.internal:host-gateway $DEFAULT_PORT ${EXPOSE_PORTS[@]/#/-p } ${LABELS[@]/#/-l } cruise-$IMAGE_VERSION:latest $ENTRYPOINT)
+            ARGS+=(docker run -d --name $CONTAINER_NAME -v "${PWD}":$WORKING_DIRECTORY -w $WORKING_DIRECTORY --cap-add=NET_ADMIN --net $DEFAULT_NETWORK $IP --add-host host.docker.internal:host-gateway $DEFAULT_PORT ${EXPOSE_PORTS[@]/#/-p } ${LABELS[@]/#/-l } yoso-$IMAGE_VERSION:latest $ENTRYPOINT)
         else
             echo "${GREEN}Starting new temporary container...${NC}" >&1
-            ARGS+=(docker run --rm --name $CONTAINER_NAME -v "${PWD}":$WORKING_DIRECTORY -w $WORKING_DIRECTORY --cap-add=NET_ADMIN --net $DEFAULT_NETWORK $IP --add-host host.docker.internal:host-gateway $DEFAULT_PORT ${EXPOSE_PORTS[@]/#/-p } ${LABELS[@]/#/-l } cruise-$IMAGE_VERSION:latest $ENTRYPOINT)
+            ARGS+=(docker run --rm --name $CONTAINER_NAME -v "${PWD}":$WORKING_DIRECTORY -w $WORKING_DIRECTORY --cap-add=NET_ADMIN --net $DEFAULT_NETWORK $IP --add-host host.docker.internal:host-gateway $DEFAULT_PORT ${EXPOSE_PORTS[@]/#/-p } ${LABELS[@]/#/-l } yoso-$IMAGE_VERSION:latest $ENTRYPOINT)
         fi
     fi
 
@@ -610,7 +619,7 @@ elif [ "$1" == "stop" ]; then
             echo "${GREEN}Stopping and removing running container...${NC}" >&1
             ARGS+=(docker rm -f $CONTAINER_NAME)
         else
-            cruise_is_not_running
+            yoso_is_not_running
         fi
     else
         # Check if there is already any container running with the same name...
@@ -618,7 +627,7 @@ elif [ "$1" == "stop" ]; then
             echo "${GREEN}Stopping running container...${NC}" >&1
             ARGS+=(docker stop $CONTAINER_NAME)
         else
-            cruise_is_not_running
+            yoso_is_not_running
         fi
     fi
 
@@ -648,28 +657,28 @@ elif [ "$1" == "restart" ]; then
         echo "${GREEN}Restarting running container...${NC}" >&1
         ARGS+=(docker restart $CONTAINER_NAME)
     else
-        cruise_is_not_running
+        yoso_is_not_running
     fi
 
-# Show cruise status...
+# Show yoso status...
 elif [ "$1" == "status" ]; then
     shift 1
 
     check_if_docker_running
     check_if_network_exists
 
-    echo "Debugging Enabled: ${BOLD}$CRUISE_DEBUG_ENABLED${NC}" >&1
+    echo "Debugging Enabled: ${BOLD}$YOSO_DEBUG_ENABLED${NC}" >&1
     echo "Stop On Debug: ${BOLD}$STOP_ON_DEBUG${NC}" >&1
     echo "Default Environment: ${BOLD}$DEFAULT_IMAGE_VERSION${NC}" >&1
     echo "Default Network: ${BOLD}$DEFAULT_NETWORK${NC}" >&1
     echo "" >&1
     echo "Available Environments:" >&1
-    ls ~/.cruise/environments
+    ls ~/.yoso/environments
     echo "" >&1
 
     exit 0
 
-# Show cruise application containers...
+# Show yoso application containers...
 elif [ "$1" == "containers" ]; then
     shift 1
 
@@ -683,9 +692,9 @@ elif [ "$1" == "containers" ]; then
     check_if_docker_running
     check_if_network_exists
 
-    CRUISE_CONTAINERS=$(
+    YOSO_CONTAINERS=$(
         docker ps $show --format '{{.Names}}' 2>/dev/null \
-        | grep -E '[^-]+-cruise-[^-]+' \
+        | grep -E '[^-]+-yoso-[^-]+' \
         | while read -r name; do
             networks=$(docker inspect -f '{{range $k,$v := .NetworkSettings.Networks}}{{printf "%s=%s " $k $v.IPAddress}}{{end}}' "$name")
             status=$(docker inspect -f '{{.State.Status}}' "$name")
@@ -695,17 +704,17 @@ elif [ "$1" == "containers" ]; then
         | cut -d'|' -f2-
     )
 
-    # Check if any cruise containers running...
-    if [[ -n "$CRUISE_CONTAINERS" ]]; then
-        echo "Found cruise containers..." >&1
-        echo "$CRUISE_CONTAINERS" >&1
+    # Check if any yoso containers running...
+    if [[ -n "$YOSO_CONTAINERS" ]]; then
+        echo "Found yoso containers..." >&1
+        echo "$YOSO_CONTAINERS" >&1
     else
-        echo "${BOLD}No running cruise containers found.${NC}" >&1
+        echo "${BOLD}No running yoso containers found.${NC}" >&1
     fi
 
     exit 0
 
-# Check project cruise status...
+# Check project yoso status...
 elif [ "$1" == "check" ]; then
     shift 1
 
@@ -718,14 +727,14 @@ elif [ "$1" == "check" ]; then
 
     check_if_docker_running
 
-    # Take version from -v, else .cruise config, else default...
+    # Take version from -v, else .yoso config, else default...
     VERSION_SOURCE="default"
     if [ -n "$NEW_IMAGE_VERSION" ]; then
         IMAGE_VERSION=$NEW_IMAGE_VERSION
         VERSION_SOURCE="-v option"
-    elif [[ -f ".cruise" && -s ".cruise" ]]; then
-        source ".cruise"
-        VERSION_SOURCE=".cruise config file"
+    elif [[ -f ".yoso" && -s ".yoso" ]]; then
+        source ".yoso"
+        VERSION_SOURCE=".yoso config file"
     fi
 
     CONTAINER_NAME=${CONTAINER_NAME/$DEFAULT_IMAGE_VERSION/$IMAGE_VERSION}
@@ -744,7 +753,7 @@ elif [ "$1" == "check" ]; then
         NETWORK_STATUS="${YELLOW}not found${NC}"
     fi
 
-    if docker image inspect "cruise-$IMAGE_VERSION:latest" > /dev/null 2>&1; then
+    if docker image inspect "yoso-$IMAGE_VERSION:latest" > /dev/null 2>&1; then
         IMAGE_STATUS="${GREEN}found${NC}"
         IMAGE_FOUND="yes"
     else
@@ -770,11 +779,11 @@ elif [ "$1" == "check" ]; then
         TRAEFIK_STATUS="${YELLOW}not found${NC}"
     fi
 
-    echo "Checking cruise status for project: ${BOLD}${PWD##*/}${NC}" >&1
+    echo "Checking yoso status for project: ${BOLD}${PWD##*/}${NC}" >&1
     echo "" >&1
     echo "${CYAN}Config:${NC} $VERSION_SOURCE (${BOLD}IMAGE_VERSION=$IMAGE_VERSION${NC})" >&1
     echo "${CYAN}Network:${NC} ${BOLD}$DEFAULT_NETWORK${NC} $NETWORK_STATUS" >&1
-    echo "${CYAN}Image:${NC} ${BOLD}cruise-$IMAGE_VERSION:latest${NC} $IMAGE_STATUS" >&1
+    echo "${CYAN}Image:${NC} ${BOLD}yoso-$IMAGE_VERSION:latest${NC} $IMAGE_STATUS" >&1
     echo "${CYAN}Container:${NC} ${BOLD}$CONTAINER_NAME${NC} $CONTAINER_STATUS" >&1
 
     # Extra details for an existing container...
@@ -792,26 +801,26 @@ elif [ "$1" == "check" ]; then
     echo "${CYAN}Traefik proxy:${NC} ${BOLD}$TRAEFIK_CONTAINER_NAME${NC} $TRAEFIK_STATUS" >&1
 
     # Check if the version has a matching environment to build from...
-    if [ ! -d "$CRUISE_DIRECTORY/environments/$IMAGE_VERSION" ]; then
+    if [ ! -d "$YOSO_DIRECTORY/environments/$IMAGE_VERSION" ]; then
         echo "" >&2
-        echo "${YELLOW}Warning: environment $IMAGE_VERSION not found in $CRUISE_DIRECTORY/environments, image build will fail.${NC}" >&2
+        echo "${YELLOW}Warning: environment $IMAGE_VERSION not found in $YOSO_DIRECTORY/environments, image build will fail.${NC}" >&2
     fi
 
     echo "" >&1
     if [ "$CONTAINER_STATE" == "running" ]; then
-        echo "${GREEN}Suggested next step:${NC} cruise start$VERSION_FLAG or cruise traefik$VERSION_FLAG (will attach to the running container)" >&1
+        echo "${GREEN}Suggested next step:${NC} yoso start$VERSION_FLAG or yoso traefik$VERSION_FLAG (will attach to the running container)" >&1
 
         exit 0
     elif [ -n "$CONTAINER_STATE" ]; then
-        echo "${GREEN}Suggested next step:${NC} cruise start$VERSION_FLAG (will start the existing container)" >&1
+        echo "${GREEN}Suggested next step:${NC} yoso start$VERSION_FLAG (will start the existing container)" >&1
 
         exit 1
     elif [ "$IMAGE_FOUND" == "yes" ]; then
-        echo "${GREEN}Suggested next step:${NC} cruise start$VERSION_FLAG or cruise traefik$VERSION_FLAG (will create a new container)" >&1
+        echo "${GREEN}Suggested next step:${NC} yoso start$VERSION_FLAG or yoso traefik$VERSION_FLAG (will create a new container)" >&1
 
         exit 2
     else
-        echo "${GREEN}Suggested next step:${NC} cruise build$VERSION_FLAG first, then cruise start$VERSION_FLAG or cruise traefik$VERSION_FLAG" >&1
+        echo "${GREEN}Suggested next step:${NC} yoso build$VERSION_FLAG first, then yoso start$VERSION_FLAG or yoso traefik$VERSION_FLAG" >&1
 
         exit 3
     fi
@@ -854,15 +863,15 @@ elif [ "$1" == "shell" ]; then
     else
         # Check if there is already container with same name
         if [ "$(docker ps -a | grep $CONTAINER_NAME)" ]; then
-            cruise_is_not_running
+            yoso_is_not_running
         fi
 
         if [ "$background" == "yes" ]; then
             echo "${GREEN}Starting new shell in background...${NC}" >&1
-            ARGS+=(docker run -d -it --name $CONTAINER_NAME -v "${PWD}":$WORKING_DIRECTORY -w $WORKING_DIRECTORY --cap-add=NET_ADMIN --net $DEFAULT_NETWORK $IP ${EXPOSE_PORTS[@]/#/-p } --add-host host.docker.internal:host-gateway cruise-$IMAGE_VERSION:latest $ENTRYPOINT)
+            ARGS+=(docker run -d -it --name $CONTAINER_NAME -v "${PWD}":$WORKING_DIRECTORY -w $WORKING_DIRECTORY --cap-add=NET_ADMIN --net $DEFAULT_NETWORK $IP ${EXPOSE_PORTS[@]/#/-p } --add-host host.docker.internal:host-gateway yoso-$IMAGE_VERSION:latest $ENTRYPOINT)
         else
             echo "${GREEN}Starting new temporary container...${NC}" >&1
-            ARGS+=(docker run -u $SHELL_USER -it --rm --name $CONTAINER_NAME -v "${PWD}":$WORKING_DIRECTORY -w $WORKING_DIRECTORY --cap-add=NET_ADMIN --net $DEFAULT_NETWORK $IP ${EXPOSE_PORTS[@]/#/-p } --add-host host.docker.internal:host-gateway cruise-$IMAGE_VERSION:latest $ENTRYPOINT)
+            ARGS+=(docker run -u $SHELL_USER -it --rm --name $CONTAINER_NAME -v "${PWD}":$WORKING_DIRECTORY -w $WORKING_DIRECTORY --cap-add=NET_ADMIN --net $DEFAULT_NETWORK $IP ${EXPOSE_PORTS[@]/#/-p } --add-host host.docker.internal:host-gateway yoso-$IMAGE_VERSION:latest $ENTRYPOINT)
         fi
     fi
 
@@ -905,15 +914,15 @@ elif [ "$1" == "root-shell" ]; then
     else
         # Check if there is already container with same name
         if [ "$(docker ps -a | grep $CONTAINER_NAME)" ]; then
-            cruise_is_not_running
+            yoso_is_not_running
         fi
 
         if [ "$background" == "yes" ]; then
             echo "${GREEN}Starting new shell in the background as root...${NC}" >&1
-            ARGS+=(docker run -d -it --name $CONTAINER_NAME -v "${PWD}":$WORKING_DIRECTORY -w $WORKING_DIRECTORY --cap-add=NET_ADMIN --net $DEFAULT_NETWORK $IP ${EXPOSE_PORTS[@]/#/-p } --add-host host.docker.internal:host-gateway cruise-$IMAGE_VERSION:latest $ENTRYPOINT)
+            ARGS+=(docker run -d -it --name $CONTAINER_NAME -v "${PWD}":$WORKING_DIRECTORY -w $WORKING_DIRECTORY --cap-add=NET_ADMIN --net $DEFAULT_NETWORK $IP ${EXPOSE_PORTS[@]/#/-p } --add-host host.docker.internal:host-gateway yoso-$IMAGE_VERSION:latest $ENTRYPOINT)
         else
             echo "${GREEN}Starting new temporary shell as root...${NC}" >&1
-            ARGS+=(docker run -it --rm --name $CONTAINER_NAME -v "${PWD}":$WORKING_DIRECTORY -w $WORKING_DIRECTORY --cap-add=NET_ADMIN --net $DEFAULT_NETWORK $IP ${EXPOSE_PORTS[@]/#/-p } --add-host host.docker.internal:host-gateway cruise-$IMAGE_VERSION:latest $ENTRYPOINT)
+            ARGS+=(docker run -it --rm --name $CONTAINER_NAME -v "${PWD}":$WORKING_DIRECTORY -w $WORKING_DIRECTORY --cap-add=NET_ADMIN --net $DEFAULT_NETWORK $IP ${EXPOSE_PORTS[@]/#/-p } --add-host host.docker.internal:host-gateway yoso-$IMAGE_VERSION:latest $ENTRYPOINT)
         fi
     fi
 
@@ -940,14 +949,14 @@ elif [ "$1" == "run" ]; then
 
     if [ -n "$NEW_IMAGE_VERSION" ]; then
         IMAGE_VERSION=$NEW_IMAGE_VERSION
-    # Check if .cruise config file exists in the project directory...
-    elif [[ -f ".cruise" && -s ".cruise" ]]; then
-        echo "${GREEN}Loading environment from .cruise config file...${NC}" >&1
+    # Check if .yoso config file exists in the project directory...
+    elif [[ -f ".yoso" && -s ".yoso" ]]; then
+        echo "${GREEN}Loading environment from .yoso config file...${NC}" >&1
 
-        source ".cruise"
+        source ".yoso"
     fi
 
-    ARGS+=(docker run -u $SHELL_USER -it --rm -v "${PWD}":$WORKING_DIRECTORY -w $WORKING_DIRECTORY --cap-add=NET_ADMIN --net $DEFAULT_NETWORK cruise-$IMAGE_VERSION:latest "${@:$OPTIND}")
+    ARGS+=(docker run -u $SHELL_USER -it --rm -v "${PWD}":$WORKING_DIRECTORY -w $WORKING_DIRECTORY --cap-add=NET_ADMIN --net $DEFAULT_NETWORK yoso-$IMAGE_VERSION:latest "${@:$OPTIND}")
 
 # Create a Laravel project...
 elif [ "$1" == "create" ]; then
@@ -982,10 +991,10 @@ elif [ "$1" == "create" ]; then
     else
         # Check if there is already container with same name
         if [ "$(docker ps -a | grep $CONTAINER_NAME)" ]; then
-            cruise_is_not_running
+            yoso_is_not_running
         fi
 
-        ARGS+=(docker run -u $SHELL_USER -it --rm --name $CONTAINER_NAME -v "${PWD}":$WORKING_DIRECTORY -w $WORKING_DIRECTORY --cap-add=NET_ADMIN --net $DEFAULT_NETWORK cruise-$IMAGE_VERSION:latest composer create-project laravel/laravel "${@:$OPTIND}")
+        ARGS+=(docker run -u $SHELL_USER -it --rm --name $CONTAINER_NAME -v "${PWD}":$WORKING_DIRECTORY -w $WORKING_DIRECTORY --cap-add=NET_ADMIN --net $DEFAULT_NETWORK yoso-$IMAGE_VERSION:latest composer create-project laravel/laravel "${@:$OPTIND}")
     fi
 
 # Start the application container with Traefik support...
@@ -1021,7 +1030,7 @@ elif [ "$1" == "traefik" ]; then
     if [ "$(docker ps -f name=$CONTAINER_NAME | grep $CONTAINER_NAME)" ]; then
         # If container is running, then bash into it...
         echo "${GREEN}Attaching to existing container...${NC}" >&1
-        ARGS+=(docker exec -u cruise -it $CONTAINER_NAME $ENTRYPOINT)
+        ARGS+=(docker exec -u yoso -it $CONTAINER_NAME $ENTRYPOINT)
     elif [ "$(docker ps -a | grep $CONTAINER_NAME)" ]; then
         # If container exist, then start it...
         echo "${GREEN}Starting existing container...${NC}" >&1
@@ -1050,10 +1059,10 @@ elif [ "$1" == "traefik" ]; then
         # Run the image with parameters...
         if [ "$background" == "yes" ]; then
             echo "${GREEN}Starting new traefik proxy compatible container in background...${NC}" >&1
-            ARGS+=(docker run -d --name $CONTAINER_NAME -v "${PWD}":$WORKING_DIRECTORY -w $WORKING_DIRECTORY --cap-add=NET_ADMIN --net $DEFAULT_NETWORK $IP --add-host host.docker.internal:host-gateway $TRAEFIK_ARGS ${EXPOSE_PORTS[@]/#/-p } ${LABELS[@]/#/-l } cruise-$IMAGE_VERSION:latest $ENTRYPOINT)
+            ARGS+=(docker run -d --name $CONTAINER_NAME -v "${PWD}":$WORKING_DIRECTORY -w $WORKING_DIRECTORY --cap-add=NET_ADMIN --net $DEFAULT_NETWORK $IP --add-host host.docker.internal:host-gateway $TRAEFIK_ARGS ${EXPOSE_PORTS[@]/#/-p } ${LABELS[@]/#/-l } yoso-$IMAGE_VERSION:latest $ENTRYPOINT)
         else
             echo "${GREEN}Starting new temporary traefik proxy compatible container...${NC}" >&1
-            ARGS+=(docker run --rm --name $CONTAINER_NAME -v "${PWD}":$WORKING_DIRECTORY -w $WORKING_DIRECTORY --cap-add=NET_ADMIN --net $DEFAULT_NETWORK $IP --add-host host.docker.internal:host-gateway $TRAEFIK_ARGS ${EXPOSE_PORTS[@]/#/-p } ${LABELS[@]/#/-l } cruise-$IMAGE_VERSION:latest $ENTRYPOINT)
+            ARGS+=(docker run --rm --name $CONTAINER_NAME -v "${PWD}":$WORKING_DIRECTORY -w $WORKING_DIRECTORY --cap-add=NET_ADMIN --net $DEFAULT_NETWORK $IP --add-host host.docker.internal:host-gateway $TRAEFIK_ARGS ${EXPOSE_PORTS[@]/#/-p } ${LABELS[@]/#/-l } yoso-$IMAGE_VERSION:latest $ENTRYPOINT)
         fi
     fi
 
@@ -1078,7 +1087,7 @@ elif [ "$1" == "code" ]; then
         CONTAINER_NAME=${CONTAINER_NAME/$DEFAULT_IMAGE_VERSION/$IMAGE_VERSION}
     fi
 
-    # Make sure vscode attaches as the cruise user instead of root...
+    # Make sure vscode attaches as the yoso user instead of root...
     configure_vscode_attach_config ${NEW_IMAGE_VERSION:-$IMAGE_VERSION}
 
     CONTAINER_HEX=$(echo -n "$CONTAINER_NAME" | od -A n -t x1 | sed 's/ *//g' | tr -d '\n')
@@ -1100,7 +1109,7 @@ elif [ "$1" == "code" ]; then
             exit 1
         fi
     else
-        cruise_is_not_running
+        yoso_is_not_running
     fi
 
 # Pass unknown commands to the "docker" binary...
@@ -1109,7 +1118,7 @@ else
 fi
 
 # Print the generated docker command when debug is enabled...
-if [ "$CRUISE_DEBUG_ENABLED" == "yes" ]; then
+if [ "$YOSO_DEBUG_ENABLED" == "yes" ]; then
     echo "" >&1
     echo "${YELLOW}Debug command:${NC} ${CYAN}${ARGS[@]}${NC}" >&1
     echo "" >&1

@@ -1,6 +1,6 @@
-# Cruise 🚢
+# YOSO (You Only Setup Once)
 
-A highly opinionated Laravel Sail like implementation of docker that focuses more on freedom of the development environment rather than sticking to your per project docker configuration. This is a setup once and "use anytime on any machine" type approach to give the developers the portability of their development environment. Cruise assumes you've no development tools installed in your system except docker and will provide all the tools in a bundled together portable environment. To know more about the motivation behind **Cruise**, you can have a look at the [backstory](#backstory) first before diving in.
+A highly opinionated Laravel Sail like implementation of docker that focuses more on freedom of the development environment rather than sticking to your per project docker configuration. This is a setup once and "use anytime on any machine" type approach to give the developers the portability of their development environment. YOSO assumes you've no development tools installed in your system except docker and will provide all the tools in a bundled together portable environment. To know more about the motivation behind **YOSO**, you can have a look at the [backstory](#backstory) first before diving in.
 
 ## Requirements
 
@@ -14,18 +14,18 @@ A highly opinionated Laravel Sail like implementation of docker that focuses mor
 
 ```bash
 # Download or clone the repo in your home
-# directory inside `~/.cruise` folder
-git clone https://github.com/rahulhaque/laravel-cruise.git ~/.cruise
+# directory inside `~/.yoso` folder
+git clone https://github.com/rahulhaque/yoso.git ~/.yoso
 
-# Install cruise by running `install` command
-~/.cruise/cruise install
+# Install yoso by running `install` command
+~/.yoso/yoso install
 
 # Install traefik by running `install` command
-~/.cruise/traefik install
+~/.yoso/traefik install
 
-# Run `cruise` to see available commands and options
+# Run `yoso` to see available commands and options
 # or press tab to see simple autocompletion
-cruise
+yoso
 
 # Run `traefik` to see available commands and options
 # or press tab to see simple autocompletion
@@ -37,70 +37,70 @@ I suggest you go through the commands and options available for the first time t
 Bash and Oh-my-zsh auto completion is added by default. If you're using something else, source the completion script by adding the below lines.
 
 ```bash
-if [ -f ~/.cruise/cruise-completion ]; then
-    source ~/.cruise/cruise-completion
+if [ -f ~/.yoso/yoso-completion ]; then
+    source ~/.yoso/yoso-completion
 fi
 
-if [ -f ~/.cruise/traefik-completion ]; then
-    source ~/.cruise/traefik-completion
+if [ -f ~/.yoso/traefik-completion ]; then
+    source ~/.yoso/traefik-completion
 fi
 ```
 
 ## Building
 
-After installing `cruise` binary, build the base image by running the following. This is a one time step for new install.
+After installing `yoso` binary, build the base image by running the following. This is a one time step for new install.
 
 I recommend running `docker builder prune` command to clear any unnecessary build cache before building.
 
-The Cruise environment versions are set to match major PHP versions for easy recall.
+The YOSO environment versions are set to match major PHP versions for easy recall.
 
 ```bash
-# Let's see which cruise environments are
+# Let's see which yoso environments are
 # available for you to build by running
-cruise environments
+yoso environments
 
 # Build the preferred environment with -v option
-cruise build -v 8.2
+yoso build -v 8.4
 ```
 
-Check if the build is successful by running `cruise images`.
+Check if the build is successful by running `yoso images`.
 
 After successful build, it is recommended that you take a backup of the image before experimenting. If anything goes wrong, you have your stable offline backup image ready to roll. To create a backup -
 
 ```bash
-cruise export -v 8.2
+yoso export -v 8.4
 ```
 
-This will create a tar file of the backup in `~/.cruise/backup/cruise-8.2.tar`.
+This will create a tar file of the backup in `~/.yoso/backup/yoso-8.4.tar`.
 
 To import a backed up image, run the `import` command along with passing the path of the backup.
 
 ```bash
-cruise import ~/.cruise/backup/cruise-8.2.tar
+yoso import ~/.yoso/backup/yoso-8.4.tar
 ```
 
 ## Usage
 
-I recommend using **Cruise** along with [Traefik](https://traefik.io/traefik/) proxy manager which will give you nice domain names for accessing your projects. If you don't know what Traefik is or heard the name for the first time, don't worry as I will guide you through the setup process. Install Traefik in a minute from [installation](#installation) section. Traefik will run in the background looking for any Cruise projects to be available to serve.
+I recommend using **YOSO** along with [Traefik](https://traefik.io/traefik/) proxy manager which will give you nice domain names for accessing your projects. If you don't know what Traefik is or heard the name for the first time, don't worry as I will guide you through the setup process. Install Traefik in a minute from [installation](#installation) section. Traefik will run in the background looking for any YOSO projects to be available to serve.
 
 ### 1. Creating New Laravel Project
 
 ```bash
-# Open terminal and check Cruise status
-cruise status
+# Open terminal and check YOSO status
+yoso status
 
-# Cruise will take the default version
-# from `~/.cruise/.config` file
+# YOSO will take the default version
+# from `~/.yoso/.config` file
 # See available environments
-# with `cruise environments`
-cruise create example-app
+# with `yoso environments`
+yoso create example-app
 
 # To create for other PHP versions (i.e. 7.4)
-cruise create -v 7.4 example-app
+yoso create -v 7.4 example-app
 ```
 
 If you create a project with any version other than the default version, you will
-have to use version `-b` option for later subsequent commands as **Cruise** keep the project folder clean by not making any config for itself. Another benefit of this is that you can switch and try different versions in an instant without touching the project files at all.
+have to use version `-b` option for later subsequent commands as **YOSO** keep the project folder clean by not making any config for itself. Another benefit of this is that you can switch and try different versions in an instant without touching the project files at all.
 
 ### 2. Running Existing Laravel Project
 
@@ -116,41 +116,41 @@ MAIL_HOST=host.docker.internal
 ...
 ```
 
-This will allow `cruise` to connect to your local MySQL, Redis or Mailpit setup from the container. Now follow along the next steps for the basics of `cruise`.
+This will allow `yoso` to connect to your local MySQL, Redis or Mailpit setup from the container. Now follow along the next steps for the basics of `yoso`.
 
 ```bash
 # Open a terminal in your project directory
 # Not sure what to run? Check the project's
 # image and container status in detail
-cruise check
+yoso check
 
 # To run the project with Nginx and proxy through Traefik.
 # If you have Traefik installed (recommended) and
 # keep running it in the background (`-b`)
-cruise traefik -b
+yoso traefik -b
 # Visit `http://<your_project_name>.localhost`
 
 # Or
 # To run project with Nginx on specific port (`-p`)
 # and keep running it in the background (`-b`)
-cruise start -p 8000 -b
+yoso start -p 8000 -b
 # Visit `http://localhost:8000`
 
 # Or
 # To run project with Nginx + Octane on specific
 # port (`-p`) and server (`-s`) and keep
 # running it in the background (`-b`)
-cruise start -s octane -p 8000 -b
+yoso start -s octane -p 8000 -b
 # Visit `http://localhost:8000`
 
 # Without background (`-b`) option the project
 # will stop as soon as you close the terminal
 
-# Run the same command again or `cruise shell`
+# Run the same command again or `yoso shell`
 # to drop inside the running project and
 # use it however you like
-cruise shell
-# `cruise shell` is an independent command.
+yoso shell
+# `yoso shell` is an independent command.
 # You can run it anywhere to spawn a
 # temporary shell anytime
 
@@ -165,11 +165,11 @@ logout
 
 # Stop the running project keeping
 # the changes in the container
-cruise stop
+yoso stop
 
 # Stop the running project discarding the
 # changes and removing the container
-cruise stop -f
+yoso stop -f
 ```
 
 #### Vite Configuration
@@ -180,7 +180,7 @@ If you plan to use Laravel Mix, Vite, Inertia, Vue or React, make sure to expose
 # Vite users can start the project by
 # exposing (`-e`) required port and
 # keep running it in the background
-cruise start -e 5173:5173 -b
+yoso start -e 5173:5173 -b
 
 # Edit the `vite.config.js` and
 # add the following in the root
@@ -193,32 +193,32 @@ export default defineConfig({
 }
 
 # Drop inside the running project
-# with `cruise shell` and
+# with `yoso shell` and
 # start the vite server
 npm run dev
 ```
 
 ### 3. Other Developments
 
-You can use **Cruise** to do any development of your choice as long as the included tools support. Simply run `cruise shell` anywhere to get the temporary development shell up with all the tools available to you. You can also start the server from shell mode. Just run `start-server` inside the shell and it will start PHP-FPM and Nginx for you. By default no port is exposed for temporary shell session. To bind any available port from your PC to any port inside the shell, run `cruise shell` with expose (`-e`) option, such as - `cruise shell -e 8000:80`. While **Cruise** provides out of the box support for Laravel applications, it is not bound to only Laravel development. Fork it, customize it and use it however you like. See [customization](#customization) section for more.
+You can use **YOSO** to do any development of your choice as long as the included tools support. Simply run `yoso shell` anywhere to get the temporary development shell up with all the tools available to you. You can also start the server from shell mode. Just run `start-server` inside the shell and it will start PHP-FPM and Nginx for you. By default no port is exposed for temporary shell session. To bind any available port from your PC to any port inside the shell, run `yoso shell` with expose (`-e`) option, such as - `yoso shell -e 8000:80`. While **YOSO** provides out of the box support for Laravel applications, it is not bound to only Laravel development. Fork it, customize it and use it however you like. See [customization](#customization) section for more.
 
-> **Note:** Any command unknown to **Cruise** will be passed to **Docker**.
+> **Note:** Any command unknown to **YOSO** will be passed to **Docker**.
 
 #### i. React Development Example
 
-A basic react application creation and setup process example with Cruise is given below -
+A basic react application creation and setup process example with YOSO is given below -
 
 ```bash
 # Create the react project directory and open
 # a terminal inside the project directory
-# Run this to start a cruise shell
-cruise shell -b -e 3000:3000
+# Run this to start a yoso shell
+yoso shell -b -e 3000:3000
 # `-b` to keep the container for reuse
 # `-e` to open the ports for React
 
-# Run the same command again or `cruise shell`
+# Run the same command again or `yoso shell`
 # to drop inside the running shell
-cruise shell
+yoso shell
 
 # Create your react project
 npx create-react-app .
@@ -234,23 +234,23 @@ logout
 
 # Stop the running project keeping
 # the changes in the container
-cruise stop
+yoso stop
 
 # Stop the running project discarding the
 # changes and removing the container
-cruise stop -f
+yoso stop -f
 ```
 
 ## VsCode Integration
 
-There's high chance after running a project, you may want to use VsCode's remote desktop to code inside the docker container (dev container). Just run the `cruise code` command and VsCode will open the project inside the container with everything configured.
+There's high chance after running a project, you may want to use VsCode's remote desktop to code inside the docker container (dev container). Just run the `yoso code` command and VsCode will open the project inside the container with everything configured.
 
 To do the above manually, open all commands and look for `Dev Containers: Attach to running container` and select your project's container. After VsCode done installing its server, open all commands and look for `Dev Containers: Open Container Configuration File...` and paste the following.
 
 ```json
 {
     "workspaceFolder": "/var/www/html",
-    "remoteUser": "cruise"
+    "remoteUser": "yoso"
 }
 ```
 
@@ -270,18 +270,18 @@ A very good default is provided out of the box to handle most Laravel, PHP, Node
 - Wkhtmltoimage (qt patched)
 - Oh-my-zsh with auto-suggestions plugin
 
-You can edit the Dockerfile in `~/.cruise/environments/<versions>` directories to customize the setup. Then rebuild the image with force (`-f`) option like - `cruise build -v <version> -f`.
+You can edit the Dockerfile in `~/.yoso/environments/<versions>` directories to customize the setup. Then rebuild the image with force (`-f`) option like - `yoso build -v <version> -f`.
 
 ## Backstory
 
-Well, I started off with Cruise being a highly opinionated implementation of those of like Laravel Sail. So, what are they? Why I thought of making Cruise and what problems it solves? It all started with me being forced to switch my workstation/laptop multiple times within a month or so because of technical issues. Installing and configuring everything from scratch every time for my development was time wasting and distracting. I wanted my development tools to be - **configured**, **backed up**, **OS independent**, **portable** and **accessible offline**. While docker can give me all of the above, it comes with the sheer complexity of its own. So, I started making Cruise and tried to make it as simple as possible for both expert and beginners in docker.
+Well, I started off with YOSO being a highly opinionated implementation of those of like Laravel Sail. So, what are they? Why I thought of making YOSO and what problems it solves? It all started with me being forced to switch my workstation/laptop multiple times within a month or so because of technical issues. Installing and configuring everything from scratch every time for my development was time wasting and distracting. I wanted my development tools to be - **configured**, **backed up**, **OS independent**, **portable** and **accessible offline**. While docker can give me all of the above, it comes with the sheer complexity of its own. So, I started making YOSO and tried to make it as simple as possible for both expert and beginners in docker.
 
-- Cruise makes the most uses of PC's local resources, like - MySQL, Redis, PostgreSQL, Mailpit etc. for everything instead of project specific multiple database, cache, mail containers. More containers, more things to manage, introduces more complexity.
-- I wanted my frequently used development tools within hand's reach, such as - PHP, Composer, Node, Npm, Git, Nginx along with different version available any time anywhere. Cruise can give you a shell with all of the above anywhere any moment with a simple command either for some quick tinkering, or long term persistent tasks, you decide.
-- Cruise focuses on configuring the base once and then use it everywhere without thinking about if one tool available in one container is available in another. Saving time in configuring project wise docker settings.
-- Cruise aims to simplify using docker while not hiding all the magic happening behind. It helps in learning docker for new comers by showing all the commands executed in the background.
+- YOSO makes the most uses of PC's local resources, like - MySQL, Redis, PostgreSQL, Mailpit etc. for everything instead of project specific multiple database, cache, mail containers. More containers, more things to manage, introduces more complexity.
+- I wanted my frequently used development tools within hand's reach, such as - PHP, Composer, Node, Npm, Git, Nginx along with different version available any time anywhere. YOSO can give you a shell with all of the above anywhere any moment with a simple command either for some quick tinkering, or long term persistent tasks, you decide.
+- YOSO focuses on configuring the base once and then use it everywhere without thinking about if one tool available in one container is available in another. Saving time in configuring project wise docker settings.
+- YOSO aims to simplify using docker while not hiding all the magic happening behind. It helps in learning docker for new comers by showing all the commands executed in the background.
 - You can create a backup of your configured environment without being too specific to your project and carry it around in pen portable drives. Usable even if there is no internet connection.
-- Last but not the least, Laravel Sail uses `php artisan serve` to serve the application in a single threaded environment. Cruise enables multi-threading and runs the application from real world perspective with PHP-FPM and Nginx.
+- Last but not the least, Laravel Sail uses `php artisan serve` to serve the application in a single threaded environment. YOSO enables multi-threading and runs the application from real world perspective with PHP-FPM and Nginx.
 
 Lastly, this may not be the best solution for you based on how you like to manage your projects. Maybe you are comfortable in some other set up. If you happen to try this out, please, do share any idea, recommendation or feedback.
 
